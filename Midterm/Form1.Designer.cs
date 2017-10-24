@@ -29,7 +29,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.BlutoothStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
@@ -41,8 +40,6 @@
             this.disconnectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.OutputGroupBox = new System.Windows.Forms.GroupBox();
             this.OutputLabel = new System.Windows.Forms.Label();
-            this.Timer = new System.Windows.Forms.Timer(this.components);
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.OutputGroupBox.SuspendLayout();
@@ -172,11 +169,9 @@
         private System.Windows.Forms.ToolStripMenuItem bluetoothSettingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.GroupBox OutputGroupBox;
-        private System.Windows.Forms.Timer Timer;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         public System.Windows.Forms.Label OutputLabel;
         public System.Windows.Forms.ToolStripStatusLabel BlutoothStatusLabel;
-        private System.Windows.Forms.Timer timer1;
     }
 }
 
