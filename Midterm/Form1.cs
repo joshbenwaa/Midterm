@@ -70,20 +70,6 @@ namespace Midterm
             this.Close();
         }
 
-        /// <summary>
-        /// Event Handler to change the number of samples
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SamplesText_TextChanged(object sender, EventArgs e)
-        {
-            Globals.Samples = Convert.ToUInt16(SamplesText.Text);
-            if (Globals.Samples >= 1000)
-            {
-                Globals.Samples = 1000;
-            }
-        }
-
         #endregion
 
         #region Helper Functions
@@ -120,45 +106,6 @@ namespace Midterm
             TempFreq.CreateHDLC();
             Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
             return Aknowledged();
-        }
-
-        /// <summary>
-        /// Refresh Global variables
-        /// </summary>
-        public void RefreshFreqGlobals()
-        {
-            try
-            {
-                Globals.StartFreq = uint.Parse(StartFreqText.Text);
-            }
-            catch (Exception)
-            {
-                OutputLabel.Text = ">> Need to Enter Values.";
-                return;
-            }
-            Globals.FreqInc = uint.Parse(FreqIncText.Text);
-            Globals.NumOfInc = ushort.Parse(IncrementsText.Text);
-            switch (OutputVoltageDropDown.SelectedItem)
-            {
-                case "2Vpp": Globals.OutputVoltage = Globals.OutputVoltage2Vpp; break;
-                case "1Vpp": Globals.OutputVoltage = Globals.OutputVoltage1Vpp; break;
-                case "400mVpp": Globals.OutputVoltage = Globals.OutputVoltage400mVpp; break;
-                case "200mVpp": Globals.OutputVoltage = Globals.OutputVoltage200mVpp; break;
-            }
-            switch (SettlingTimeCombo.SelectedItem)
-            {
-                case "60": Globals.SettlingCycles = 60; break;
-                case "255": Globals.SettlingCycles = 255; break;
-                case "510": Globals.SettlingCycles = 510; break;
-                case "1022": Globals.SettlingCycles = 1022; break;
-                case "2044": Globals.SettlingCycles = 2044; break;
-
-            }
-            Globals.Samples = Convert.ToInt32(SamplesText.Text);
-            Globals.SwitchA = (byte)aNumber.Value;
-            Globals.SwitchB = (byte)bNumber.Value;
-            Globals.SwitchTn = (byte)TnNumber.Value;
-            Globals.SwitchTp = (byte)TpNumber.Value;
         }
 
         /// <summary>
