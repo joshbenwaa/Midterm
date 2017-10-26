@@ -40,6 +40,9 @@
             this.disconnectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.OutputGroupBox = new System.Windows.Forms.GroupBox();
             this.OutputLabel = new System.Windows.Forms.Label();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.button_download = new System.Windows.Forms.Button();
+            this.button_StartStop = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.OutputGroupBox.SuspendLayout();
@@ -50,9 +53,9 @@
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.BlutoothStatusLabel,
             this.toolStripProgressBar1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 508);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 100);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(450, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(306, 22);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -76,7 +79,7 @@
             this.connectionToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(450, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(306, 24);
             this.menuStrip1.TabIndex = 3;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -138,11 +141,37 @@
             this.OutputLabel.TabIndex = 0;
             this.OutputLabel.Text = ">>";
             // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.FileName = "openFileDialog1";
+            // 
+            // button_download
+            // 
+            this.button_download.Location = new System.Drawing.Point(18, 27);
+            this.button_download.Name = "button_download";
+            this.button_download.Size = new System.Drawing.Size(75, 23);
+            this.button_download.TabIndex = 10;
+            this.button_download.Text = "Download";
+            this.button_download.UseVisualStyleBackColor = true;
+            this.button_download.Click += new System.EventHandler(this.button_download_Click);
+            // 
+            // button_StartStop
+            // 
+            this.button_StartStop.Location = new System.Drawing.Point(18, 57);
+            this.button_StartStop.Name = "button_StartStop";
+            this.button_StartStop.Size = new System.Drawing.Size(75, 23);
+            this.button_StartStop.TabIndex = 11;
+            this.button_StartStop.Text = "Start";
+            this.button_StartStop.UseVisualStyleBackColor = true;
+            this.button_StartStop.Click += new System.EventHandler(this.button_StartStop_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(450, 530);
+            this.ClientSize = new System.Drawing.Size(306, 122);
+            this.Controls.Add(this.button_StartStop);
+            this.Controls.Add(this.button_download);
             this.Controls.Add(this.OutputGroupBox);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStrip1);
@@ -172,6 +201,9 @@
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         public System.Windows.Forms.Label OutputLabel;
         public System.Windows.Forms.ToolStripStatusLabel BlutoothStatusLabel;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.Button button_download;
+        private System.Windows.Forms.Button button_StartStop;
     }
 }
 

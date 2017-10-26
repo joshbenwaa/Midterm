@@ -5,7 +5,8 @@ using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-
+using System.IO;
+using System.Text.RegularExpressions;
 namespace Midterm
 {
     public partial class Main : Form
@@ -93,22 +94,6 @@ namespace Midterm
         #region Sending Data
 
         /// <summary>
-        /// Tell the PIC chip to test at that frequency
-        /// </summary>
-        /// <param name="currfreq">the current frequency to test at.</param>
-        /// <returns>True if PIC acknowledges</returns>
-        public bool SendTest(uint currfreq)
-        {
-            byte[] tempData = BitConverter.GetBytes(currfreq);
-            HDLC_tx TempFreq = new HDLC_tx();
-            TempFreq.cmd = 0x06;
-            TempFreq.Data = new List<byte>(tempData);
-            TempFreq.CreateHDLC();
-            Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
-            return Aknowledged();
-        }
-
-        /// <summary>
         /// Check for the acknowledgement flags
         /// </summary>
         /// <returns>True if the PIC acknowledges the command</returns>
@@ -164,9 +149,9 @@ namespace Midterm
         /// Sends the switching variables
         /// </summary>
         /// <returns>Returns true if the PIC acknowledges the command</returns>
-        private bool SendSwitches()
+        private bool SendStop()
         {
-            List<byte> TempData = new List<byte> { Globals.SwitchA, Globals.SwitchB, Globals.SwitchTn, Globals.SwitchTp };
+            List<byte> TempData = new List<byte> {};
             HDLC_tx TempFreq = new HDLC_tx();
             TempFreq.cmd = 0x03;
             TempFreq.Data = TempData;
@@ -179,9 +164,9 @@ namespace Midterm
         /// Send Output Voltage Range Variable
         /// </summary>
         /// <returns>Returns true if the PIC Acknowledges</returns>
-        private bool SendOutputRange()
+        private bool SendStart()
         {
-            List<byte> TempData = new List<byte> { Globals.OutputVoltage };
+            List<byte> TempData = new List<byte> {};
             HDLC_tx TempFreq = new HDLC_tx();
             TempFreq.cmd = 0x02;
             TempFreq.Data = TempData;
@@ -190,51 +175,90 @@ namespace Midterm
             return Aknowledged();
         }
 
-        /// <summary>
-        /// Send Data Request
-        /// </summary>
-        /// <returns>Returns true if the PIC acknowedges the command</returns>
-        private bool SendDataRequest()
-        {
-            byte[] tempData = { };
-            HDLC_tx TempFreq = new HDLC_tx();
-            TempFreq.cmd = 0x07;
-            TempFreq.Data = new List<byte>();
-            TempFreq.CreateHDLC();
-            Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
-            return Aknowledged();
-        }
-
-        /// <summary>
-        /// Send the Request for Temperature data
-        /// </summary>
-        /// <returns>returns true if the PIC acknowledges the command</returns>
-        private bool SendTempRequest()
-        {
-            HDLC_tx TempFreq = new HDLC_tx();
-            TempFreq.cmd = 0x05;
-            TempFreq.Data = new List<byte>();
-            TempFreq.CreateHDLC();
-            Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
-            return Aknowledged();
-        }
-
-        /// <summary>
-        /// Send the number of samples to take to the PIC
-        /// </summary>
-        /// <returns>Returns true if the PIC acknowedges the command</returns>
-        private bool SendSamples()
-        {
-            byte[] tempData = BitConverter.GetBytes(Globals.Samples);
-            HDLC_tx TempFreq = new HDLC_tx();
-            TempFreq.cmd = 0x08;
-            TempFreq.Data = new List<byte>(tempData);
-            TempFreq.CreateHDLC();
-            Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
-            return Aknowledged();
-        }
-
         #endregion
 
+        private void button_download_Click(object sender, EventArgs e)
+        {
+            int FirstPara = 0;
+            int SecondPara = 0;
+            String coef = null;
+            Stream myStream = null;
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+            char[] buffer;
+            openFileDialog1.InitialDirectory = "c:\\";
+            openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+            openFileDialog1.FilterIndex = 2;
+            openFileDialog1.RestoreDirectory = true;
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    if ((myStream = openFileDialog1.OpenFile()) != null)
+                    {
+                        using (myStream)
+                        {
+                            using (var sr = new StreamReader(myStream))
+                            {
+                                buffer = new char[(int)sr.BaseStream.Length];
+                                sr.Read(buffer, 0, (int)sr.BaseStream.Length);
+                                while(buffer[FirstPara] != '{')
+                                {
+                                    FirstPara++;
+                                }
+                                while(buffer[SecondPara] != '}')
+                                {
+                                    SecondPara++;
+                                }
+                                coef = new string(buffer, FirstPara, SecondPara - FirstPara); //Get string of Coefs
+                                coef = Regex.Replace(coef, @"\s", String.Empty); //Remove white Space
+
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+                }
+            }
+        }
+
+        private void button_StartStop_Click(object sender, EventArgs e)
+        {
+            if (Globals.Serial.IsOpen)
+            {
+                byte FailedCounter = 0;
+                if (button_StartStop.Text == "Start") //Stop the stuff
+                {
+                    while (!SendStop())
+                    {
+                        FailedCounter++;
+                        if (FailedCounter >= 3)
+                        {
+                            OutputLabel.Text += ">> Sending Switch Config Failed\n>> Test Failed";
+                            return;
+                        }
+                    }
+                    button_StartStop.Text = "Stop";
+                }
+                else //Start the stuff
+                {
+                    while (!SendStart())
+                    {
+                        FailedCounter++;
+                        if (FailedCounter >= 3)
+                        {
+                            OutputLabel.Text += ">> Sending Switch Config Failed\n>> Test Failed";
+                            return;
+                        }
+                    }
+                    button_StartStop.Text = "Start";
+                }
+            }
+            else
+            {
+                OutputLabel.Text += "Please Connect to Bluetooth";
+            }
+        }
     }
 }
