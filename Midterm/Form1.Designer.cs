@@ -53,9 +53,9 @@
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.BlutoothStatusLabel,
             this.toolStripProgressBar1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 100);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 135);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(306, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(388, 22);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -79,7 +79,7 @@
             this.connectionToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(306, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(388, 24);
             this.menuStrip1.TabIndex = 3;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -124,7 +124,7 @@
             // OutputGroupBox
             // 
             this.OutputGroupBox.Controls.Add(this.OutputLabel);
-            this.OutputGroupBox.Location = new System.Drawing.Point(12, 389);
+            this.OutputGroupBox.Location = new System.Drawing.Point(99, 27);
             this.OutputGroupBox.Name = "OutputGroupBox";
             this.OutputGroupBox.Size = new System.Drawing.Size(282, 100);
             this.OutputGroupBox.TabIndex = 9;
@@ -169,7 +169,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(306, 122);
+            this.ClientSize = new System.Drawing.Size(388, 157);
             this.Controls.Add(this.button_StartStop);
             this.Controls.Add(this.button_download);
             this.Controls.Add(this.OutputGroupBox);

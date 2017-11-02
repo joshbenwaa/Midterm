@@ -127,12 +127,11 @@ namespace Midterm
         /// Send Settling Time Cycles
         /// </summary>
         /// <returns>Returns true if the PIC acknowledges the command</returns>
-        private bool SendSettlingTime()
+        private bool SendCoef(byte[] coef)
         {
-            byte[] tempData = BitConverter.GetBytes(Globals.SettlingCycles);
             HDLC_tx TempFreq = new HDLC_tx();
             TempFreq.cmd = 0x01;
-            TempFreq.Data = new List<byte>(tempData);
+            TempFreq.Data = new List<byte>(coef);
             TempFreq.CreateHDLC();
             try
             {
@@ -179,13 +178,16 @@ namespace Midterm
 
         private void button_download_Click(object sender, EventArgs e)
         {
+            Globals.Serial.ReadTimeout = -1;
             int FirstPara = 0;
             int SecondPara = 0;
+            byte FailedCounter = 0;
+            byte[] coeff_values = null;
             String coef = null;
             Stream myStream = null;
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
             char[] buffer;
-            openFileDialog1.InitialDirectory = "c:\\";
+            openFileDialog1.InitialDirectory = "D:\\School";
             openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
             openFileDialog1.FilterIndex = 2;
             openFileDialog1.RestoreDirectory = true;
@@ -209,56 +211,104 @@ namespace Midterm
                                 {
                                     SecondPara++;
                                 }
-                                coef = new string(buffer, FirstPara, SecondPara - FirstPara); //Get string of Coefs
-                                coef = Regex.Replace(coef, @"\s", String.Empty); //Remove white Space
-
+                                coef = new string(buffer, FirstPara + 1, SecondPara - FirstPara - 1); //Get string of Coefs
+                                coeff_values = CreateValueArray(coef);
+                                if (Globals.Serial.IsOpen)
+                                {
+                                    OutputLabel.Text = ">> Sending Coefs...\n";
+                                    while (!SendCoef(coeff_values))
+                                    {
+                                        FailedCounter++;
+                                        if (FailedCounter >= 3)
+                                        {
+                                            OutputLabel.Text += ">> Sending Coefs Failed\n";
+                                            return;
+                                        }
+                                    }
+                                    OutputLabel.Text += ">> Coeficients Sent.\n";
+                                }
+                                else
+                                {
+                                    OutputLabel.Text += ">> Please Connect Bluetooth\n";
+                                }
                             }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
-                }
             }
+                catch (Exception ex)
+            {
+                MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+            }
+        }
         }
 
         private void button_StartStop_Click(object sender, EventArgs e)
         {
+            Globals.Serial.ReadTimeout = 1000;
             if (Globals.Serial.IsOpen)
             {
                 byte FailedCounter = 0;
-                if (button_StartStop.Text == "Start") //Stop the stuff
+                if (button_StartStop.Text == "Running") //Stop the stuff
                 {
+                    OutputLabel.Text = ">> Sending Stop Command...\n";
                     while (!SendStop())
                     {
                         FailedCounter++;
                         if (FailedCounter >= 3)
                         {
-                            OutputLabel.Text += ">> Sending Switch Config Failed\n>> Test Failed";
+                            OutputLabel.Text += ">> Sending Stop Signal Failed\n";
                             return;
                         }
                     }
-                    button_StartStop.Text = "Stop";
+                    button_StartStop.Text = "Stopped";
+                    OutputLabel.Text += ">> Filter Stopped\n";
                 }
                 else //Start the stuff
                 {
+                    OutputLabel.Text = ">> Sending Start Command...\n";
                     while (!SendStart())
                     {
                         FailedCounter++;
                         if (FailedCounter >= 3)
                         {
-                            OutputLabel.Text += ">> Sending Switch Config Failed\n>> Test Failed";
+                            OutputLabel.Text += ">> Sending Start Siganl Failed\n";
                             return;
                         }
                     }
-                    button_StartStop.Text = "Start";
+                    button_StartStop.Text = "Running";
+                    OutputLabel.Text += ">> Filter Running...\n";
                 }
             }
             else
             {
-                OutputLabel.Text += "Please Connect to Bluetooth";
+                OutputLabel.Text += ">> Please Connect to Bluetooth";
             }
+        }
+
+        byte[] CreateValueArray(string Values)
+        {
+            string tempValue;
+            byte[] tempInt;
+            List<byte> temp = new List<byte>();
+            int OldComma = 0;
+            Values = Values.Replace(" ", ""); //Remove spaces
+            Values = Values.Replace("\r\n", ""); //Remove new line and return
+            if (Values[Values.Length - 1] != ',')
+            {
+                Values += ',';
+            }
+            for (int i = 0; i < Values.Length; i++)
+            {
+                if (Values[i] == ',')
+                {
+                    tempValue = Values.Substring(OldComma, i - OldComma);
+                    tempInt = BitConverter.GetBytes(Int16.Parse(tempValue));
+                    temp.Add(tempInt[0]);
+                    temp.Add(tempInt[1]);
+                    OldComma = i + 1;
+                }
+            }
+            return temp.ToArray();
         }
     }
 }
