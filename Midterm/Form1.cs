@@ -174,6 +174,60 @@ namespace Midterm
             return Aknowledged();
         }
 
+        private bool SendPeriod(UInt16 Period)
+        {
+            byte[] TempData = BitConverter.GetBytes( Globals.Period);
+            HDLC_tx TempFreq = new HDLC_tx();
+            TempFreq.cmd = 0x04;
+            TempFreq.Data = new List<byte>(TempData);
+            TempFreq.CreateHDLC();
+            Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
+            return Aknowledged();
+        }
+
+        private bool SendPeriod_LPF(UInt16 Period)
+        {
+            byte[] TempData = BitConverter.GetBytes(Period);
+            HDLC_tx TempFreq = new HDLC_tx();
+            TempFreq.cmd = 0x07;
+            TempFreq.Data = new List<byte>(TempData);
+            TempFreq.CreateHDLC();
+            Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
+            return Aknowledged();
+        }
+
+        private bool SendPeriod_BPF(UInt16 Period)
+        {
+            byte[] TempData = BitConverter.GetBytes(Period);
+            HDLC_tx TempFreq = new HDLC_tx();
+            TempFreq.cmd = 0x08;
+            TempFreq.Data = new List<byte>(TempData);
+            TempFreq.CreateHDLC();
+            Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
+            return Aknowledged();
+        }
+
+        private bool SendOffset(Byte off)
+        {
+            byte[] TempData = BitConverter.GetBytes(Globals.offset);
+            HDLC_tx TempFreq = new HDLC_tx();
+            TempFreq.cmd = 0x05;
+            TempFreq.Data = new List<byte>(TempData);
+            TempFreq.CreateHDLC();
+            Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
+            return Aknowledged();
+        }
+
+        private bool SendScale(Byte s)
+        {
+            byte[] TempData = BitConverter.GetBytes(Globals.Period);
+            HDLC_tx TempFreq = new HDLC_tx();
+            TempFreq.cmd = 0x06;
+            TempFreq.Data = new List<byte>(TempData);
+            TempFreq.CreateHDLC();
+            Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
+            return Aknowledged();
+        }
         #endregion
 
         private void button_download_Click(object sender, EventArgs e)
@@ -184,62 +238,143 @@ namespace Midterm
             byte FailedCounter = 0;
             byte[] coeff_values = null;
             String coef = null;
+            UInt16 tempperiod = 0;
             Stream myStream = null;
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
             char[] buffer;
-            openFileDialog1.InitialDirectory = "D:\\School";
-            openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
-            openFileDialog1.FilterIndex = 2;
-            openFileDialog1.RestoreDirectory = true;
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            if (comboBox_FilterSelection.SelectedItem == "Custom")
             {
-                try
+                openFileDialog1.InitialDirectory = "D:\\School";
+                openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+                openFileDialog1.FilterIndex = 2;
+                openFileDialog1.RestoreDirectory = true;
+                if (openFileDialog1.ShowDialog() == DialogResult.OK)
                 {
-                    if ((myStream = openFileDialog1.OpenFile()) != null)
+                    try
                     {
-                        using (myStream)
+                        if ((myStream = openFileDialog1.OpenFile()) != null)
                         {
-                            using (var sr = new StreamReader(myStream))
+                            using (myStream)
                             {
-                                buffer = new char[(int)sr.BaseStream.Length];
-                                sr.Read(buffer, 0, (int)sr.BaseStream.Length);
-                                while(buffer[FirstPara] != '{')
+                                using (var sr = new StreamReader(myStream))
                                 {
-                                    FirstPara++;
-                                }
-                                while(buffer[SecondPara] != '}')
-                                {
-                                    SecondPara++;
-                                }
-                                coef = new string(buffer, FirstPara + 1, SecondPara - FirstPara - 1); //Get string of Coefs
-                                coeff_values = CreateValueArray(coef);
-                                if (Globals.Serial.IsOpen)
-                                {
-                                    OutputLabel.Text = ">> Sending Coefs...\n";
-                                    while (!SendCoef(coeff_values))
+                                    buffer = new char[(int)sr.BaseStream.Length];
+                                    sr.Read(buffer, 0, (int)sr.BaseStream.Length);
+                                    while (buffer[FirstPara] != '{')
                                     {
-                                        FailedCounter++;
-                                        if (FailedCounter >= 3)
-                                        {
-                                            OutputLabel.Text += ">> Sending Coefs Failed\n";
-                                            return;
-                                        }
+                                        FirstPara++;
                                     }
-                                    OutputLabel.Text += ">> Coeficients Sent.\n";
-                                }
-                                else
-                                {
-                                    OutputLabel.Text += ">> Please Connect Bluetooth\n";
+                                    while (buffer[SecondPara] != '}')
+                                    {
+                                        SecondPara++;
+                                    }
+                                    coef = new string(buffer, FirstPara + 1, SecondPara - FirstPara - 1); //Get string of Coefs
+                                    coeff_values = CreateValueArray(coef);
+                                    if (Globals.Serial.IsOpen)
+                                    {
+                                        OutputLabel.Text = ">> Sending Coefs...\n";
+                                        while (!SendCoef(coeff_values))
+                                        {
+                                            FailedCounter++;
+                                            if (FailedCounter >= 3)
+                                            {
+                                                OutputLabel.Text += ">> Sending Coefs Failed\n";
+                                                return;
+                                            }
+                                        }
+                                        OutputLabel.Text += ">> Coeficients Sent.\n";
+                                    }
+                                    else
+                                    {
+                                        OutputLabel.Text += ">> Please Connect Bluetooth\n";
+                                    }
                                 }
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+                    }
+                }
             }
-                catch (Exception ex)
+            else //Everting thats not custom
             {
-                MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+                switch(comboBox_FilterSelection.SelectedItem)
+                {
+                    case "LPF":
+                        switch (comboBox_CutoffSelection.SelectedItem)
+                        {
+                            case "100Hz":
+                                tempperiod = Globals.LPF_100_Period;
+                                //coeff_values = CreateValueArray(Globals.LPF_100);
+                                break;
+                            case "200Hz":
+                                tempperiod = Globals.LPF_200_Period;
+                                //coeff_values = CreateValueArray(Globals.LPF_200);
+                                break;
+                            case "300Hz":
+                                tempperiod = Globals.LPF_300_Period;
+                                //coeff_values = CreateValueArray(Globals.LPF_300);
+                                break;
+                        }
+                        if (Globals.Serial.IsOpen)
+                        {
+                            OutputLabel.Text = ">> Setting up LPF...\n";
+                            while (!SendPeriod_LPF(tempperiod))
+                            {
+                                FailedCounter++;
+                                if (FailedCounter >= 3)
+                                {
+                                    OutputLabel.Text += ">> SSetting Up LPF Failed\n";
+                                    return;
+                                }
+                            }
+                            OutputLabel.Text += ">> LPF Set up.\n";
+                        }
+                        else
+                        {
+                            OutputLabel.Text += ">> Please Connect Bluetooth\n";
+                        }
+                        break;
+
+                    case "BPF":
+                        switch (comboBox_CutoffSelection.SelectedItem)
+                        {
+                            case "100Hz":
+                                tempperiod = Globals.BPF_100_Period;
+                                //coeff_values = CreateValueArray(Globals.BPF_100);
+                                break;
+                            case "200Hz":
+                                tempperiod = Globals.BPF_200_Period;
+                                //coeff_values = CreateValueArray(Globals.BPF_200);
+                                break;
+                            case "300Hz":
+                                tempperiod = Globals.BPF_300_Period;
+                                //coeff_values = CreateValueArray(Globals.BPF_300);
+                                break;
+                        }
+                        if (Globals.Serial.IsOpen)
+                        {
+                            OutputLabel.Text = ">> Setting up BPF...\n";
+                            while (!SendPeriod_BPF(tempperiod))
+                            {
+                                FailedCounter++;
+                                if (FailedCounter >= 3)
+                                {
+                                    OutputLabel.Text += ">> Setting Up BPF Failed\n";
+                                    return;
+                                }
+                            }
+                            OutputLabel.Text += ">> BPF Set up.\n";
+                        }
+                        else
+                        {
+                            OutputLabel.Text += ">> Please Connect Bluetooth\n";
+                        }
+                        break;
+                }
             }
-        }
         }
 
         private void button_StartStop_Click(object sender, EventArgs e)
@@ -309,6 +444,130 @@ namespace Midterm
                 }
             }
             return temp.ToArray();
+        }
+
+        #region Offset Functions
+        private void button_offset_Click(object sender, EventArgs e)
+        {
+            int FailedCounter = 0;
+            OutputLabel.Text = ">> Sending Offset Command...\n";
+            while (!SendOffset(Globals.offset))
+            {
+                FailedCounter++;
+                if (FailedCounter >= 3)
+                {
+                    OutputLabel.Text += ">> Sending Offset Signal Failed\n";
+                    return;
+                }
+            }
+        }
+
+        private void textBox_Offset_TextChanged(object sender, EventArgs e)
+        {
+            if (Byte.TryParse(textBox_Period.Text, out Byte temp))
+            {
+                Globals.offset = temp;
+            }
+            else
+            {
+                Globals.offset = 133;
+            }
+        }
+
+        #endregion
+
+        #region Period Functions
+        private void textBox_Period_TextChanged(object sender, EventArgs e)
+        {
+            if (UInt16.TryParse(textBox_Period.Text, out UInt16 temp))
+            {
+                Globals.Period = temp;
+            }
+            else
+            {
+                Globals.Period = 10000;
+            }
+        }
+        private void button_period_Click(object sender, EventArgs e)
+        {
+            int FailedCounter = 0;
+            OutputLabel.Text = ">> Sending Period Command...\n";
+            while (!SendPeriod(Globals.Period))
+            {
+                FailedCounter++;
+                if (FailedCounter >= 3)
+                {
+                    OutputLabel.Text += ">> Sending Period Signal Failed\n";
+                    return;
+                }
+            }
+            OutputLabel.Text = ">> Period Sent \n";
+        }
+        #endregion
+
+        #region Scale Functions
+        private void textBox_Scale_TextChanged(object sender, EventArgs e)
+        {
+            if (Byte.TryParse(textBox_Period.Text, out Byte temp))
+            {
+                Globals.scale = temp;
+            }
+            else
+            {
+                Globals.scale = 22;
+            }
+        }
+
+        private void button_scale_Click(object sender, EventArgs e)
+        {
+            int FailedCounter = 0;
+            OutputLabel.Text = ">> Sending Scale Command...\n";
+            while (!SendScale(Globals.scale))
+            {
+                FailedCounter++;
+                if (FailedCounter >= 3)
+                {
+                    OutputLabel.Text += ">> Sending Scale Signal Failed\n";
+                    return;
+                }
+            }
+        }
+        #endregion
+
+        private void comboBox_FilterSelection_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            if(comboBox_FilterSelection.SelectedItem == "Custom")
+            {
+                textBox1.Enabled = true;
+                textBox2.Enabled = true;
+                textBox_Period.Enabled = true;
+                comboBox_CutoffSelection.Enabled = false;
+                checkBox_manual.Enabled = true;
+            }
+            else
+            {
+                textBox1.Enabled = false;
+                textBox2.Enabled = false;
+                textBox_Period.Enabled = false;
+                comboBox_CutoffSelection.Enabled = true;
+                checkBox_manual.Enabled = false;
+            }
+        }
+
+        private void checkBox_manual_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox_manual.Checked)
+            {
+                button_offset.Enabled = true;
+                button_period.Enabled = true;
+                button_scale.Enabled = true;
+            }
+            else
+            {
+                button_offset.Enabled = false;
+                button_period.Enabled = false;
+                button_scale.Enabled = false;
+            }
         }
     }
 }
