@@ -207,7 +207,7 @@ namespace Midterm
             return Aknowledged();
         }
 
-        private bool SendOffset(Byte off)
+        private bool SendOffset()
         {
             byte[] TempData = BitConverter.GetBytes(Globals.offset);
             HDLC_tx TempFreq = new HDLC_tx();
@@ -220,7 +220,7 @@ namespace Midterm
 
         private bool SendScale(Byte s)
         {
-            byte[] TempData = BitConverter.GetBytes(Globals.Period);
+            byte[] TempData = BitConverter.GetBytes(s);
             HDLC_tx TempFreq = new HDLC_tx();
             TempFreq.cmd = 0x06;
             TempFreq.Data = new List<byte>(TempData);
@@ -228,7 +228,17 @@ namespace Midterm
             Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
             return Aknowledged();
         }
-        #endregion
+
+        private bool Send_Write_to_GUI(byte flag)
+        {
+            byte[] TempData = BitConverter.GetBytes(flag);
+            HDLC_tx TempFreq = new HDLC_tx();
+            TempFreq.cmd = 0xFF;
+            TempFreq.Data = new List<byte>(TempData);
+            TempFreq.CreateHDLC();
+            Globals.Serial.Write(TempFreq.Buffer, 0, TempFreq.Buffer.Length);
+            return Aknowledged();
+        }
 
         private void button_download_Click(object sender, EventArgs e)
         {
@@ -420,6 +430,23 @@ namespace Midterm
             }
         }
 
+        private void button_offset_Click(object sender, EventArgs e)
+        {
+            int FailedCounter = 0;
+            OutputLabel.Text = ">> Sending Offset Command...\n";
+            while (!SendOffset())
+            {
+                FailedCounter++;
+                if (FailedCounter >= 3)
+                {
+                    OutputLabel.Text += ">> Sending Offset Signal Failed\n";
+                    return;
+                }
+            }
+        }
+        #endregion
+
+
         byte[] CreateValueArray(string Values)
         {
             string tempValue;
@@ -447,20 +474,7 @@ namespace Midterm
         }
 
         #region Offset Functions
-        private void button_offset_Click(object sender, EventArgs e)
-        {
-            int FailedCounter = 0;
-            OutputLabel.Text = ">> Sending Offset Command...\n";
-            while (!SendOffset(Globals.offset))
-            {
-                FailedCounter++;
-                if (FailedCounter >= 3)
-                {
-                    OutputLabel.Text += ">> Sending Offset Signal Failed\n";
-                    return;
-                }
-            }
-        }
+
 
         private void textBox_Offset_TextChanged(object sender, EventArgs e)
         {
@@ -568,6 +582,116 @@ namespace Midterm
                 button_period.Enabled = false;
                 button_scale.Enabled = false;
             }
+        }
+
+        private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            HDLC_Rx DataRx = new HDLC_Rx();
+            HDLC_Rx.DPA_RX_STATE state = new HDLC_Rx.DPA_RX_STATE();
+            
+            while (true)
+            {
+                DataRx = new HDLC_Rx();
+                state = new HDLC_Rx.DPA_RX_STATE();
+
+                #region Parse through Data
+
+
+                while (state == HDLC_Rx.DPA_RX_STATE.DPA_RX_NOERR)
+                {
+                    try
+                    {
+                        state = DataRx.DPA_RX_Parse((byte)Globals.Serial.ReadByte());
+                }
+                    catch (Exception)
+                {
+                    Append_Output(">> Test failed to parse data\n");
+                    return;
+                }
+            }
+
+                switch (state)
+                {
+                    case HDLC_Rx.DPA_RX_STATE.DPA_RX_OK:
+                        Plot_Point(DataRx.Data[0], DataRx.Data[1]);
+                        break;
+                    case HDLC_Rx.DPA_RX_STATE.DPA_RX_FE:
+                        Append_Output(">> An error in the calibration data frame.\n"); return;
+                    case HDLC_Rx.DPA_RX_STATE.DPA_RX_CRCERR:
+                        //success = false;
+                        break;
+                }
+            }
+            #endregion
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
+
+        }
+
+        private void checkBox_graph_CheckedChanged(object sender, EventArgs e)
+        {
+            if(checkBox_graph.Checked)
+            {
+                int FailedCounter = 0;
+                OutputLabel.Text = ">> Sending Write to GUI Command...\n";
+                while (!Send_Write_to_GUI(1))
+                {
+                    FailedCounter++;
+                    if (FailedCounter >= 3)
+                    {
+                        OutputLabel.Text += ">> Sending Write to GUi Signal Failed\n";
+                        return;
+                    }
+                }
+                OutputLabel.Text += ">> Plotting is Enabled\n";
+                //Globals.Serial.DiscardInBuffer();
+                backgroundWorker1.RunWorkerAsync();
+            }
+            else
+            {
+                backgroundWorker1.CancelAsync();
+                int FailedCounter = 0;
+                OutputLabel.Text = ">> Sending Write to GUI Command...\n";
+                while (!Send_Write_to_GUI(0))
+                {
+                    FailedCounter++;
+                    if (FailedCounter >= 3)
+                    {
+                        OutputLabel.Text += ">> Sending Write to GUi Signal Failed\n";
+                        return;
+                    }
+                }
+                OutputLabel.Text += ">> Plotting is disabled\n";
+            }
+        }
+
+        public void Append_Output(string value)
+        {
+            if (InvokeRequired)
+            {
+                this.Invoke(new Action<string>(Append_Output), new object[] { value });
+                return;
+            }
+            OutputLabel.Text += value;
+        }
+
+        public void Plot_Point(byte value1, byte value2)
+        {
+            if(InvokeRequired)
+            {
+                this.Invoke(new Action<byte,byte>(Plot_Point), new object[] { value1, value2 });
+                return;
+            }
+            if(chart1.Series[0].Points.Count == 20)
+            {
+                chart1.Series[0].Points.Clear();
+                chart1.Series[1].Points.Clear();
+            }
+            chart1.Series[0].Points.AddY(value1);
+            chart1.Series[1].Points.AddY(value2);
+            chart1.Update();
         }
     }
 }

@@ -29,8 +29,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.BlutoothStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -61,6 +62,8 @@
             this.label_Cutoff = new System.Windows.Forms.Label();
             this.checkBox_manual = new System.Windows.Forms.CheckBox();
             this.label_period = new System.Windows.Forms.Label();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.checkBox_graph = new System.Windows.Forms.CheckBox();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.OutputGroupBox.SuspendLayout();
@@ -72,9 +75,9 @@
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.BlutoothStatusLabel,
             this.toolStripProgressBar1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 466);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 552);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(751, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(969, 22);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -98,7 +101,7 @@
             this.connectionToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(751, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(969, 24);
             this.menuStrip1.TabIndex = 3;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -143,7 +146,7 @@
             // OutputGroupBox
             // 
             this.OutputGroupBox.Controls.Add(this.OutputLabel);
-            this.OutputGroupBox.Location = new System.Drawing.Point(12, 363);
+            this.OutputGroupBox.Location = new System.Drawing.Point(9, 449);
             this.OutputGroupBox.Name = "OutputGroupBox";
             this.OutputGroupBox.Size = new System.Drawing.Size(698, 100);
             this.OutputGroupBox.TabIndex = 9;
@@ -186,17 +189,24 @@
             // 
             // chart1
             // 
-            chartArea2.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea2);
-            legend2.Name = "Legend1";
-            this.chart1.Legends.Add(legend2);
+            chartArea1.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chart1.Legends.Add(legend1);
             this.chart1.Location = new System.Drawing.Point(216, 27);
             this.chart1.Name = "chart1";
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series1.IsXValueIndexed = true;
+            series1.Legend = "Legend1";
+            series1.Name = "Filtered";
             series2.ChartArea = "ChartArea1";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
             series2.Legend = "Legend1";
-            series2.Name = "Series1";
+            series2.Name = "Sampled";
+            this.chart1.Series.Add(series1);
             this.chart1.Series.Add(series2);
-            this.chart1.Size = new System.Drawing.Size(494, 324);
+            this.chart1.Size = new System.Drawing.Size(741, 416);
             this.chart1.TabIndex = 12;
             this.chart1.Text = "chart1";
             // 
@@ -345,11 +355,29 @@
             this.label_period.TabIndex = 26;
             this.label_period.Text = "Period";
             // 
+            // backgroundWorker1
+            // 
+            this.backgroundWorker1.WorkerSupportsCancellation = true;
+            this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
+            this.backgroundWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker1_RunWorkerCompleted);
+            // 
+            // checkBox_graph
+            // 
+            this.checkBox_graph.AutoSize = true;
+            this.checkBox_graph.Location = new System.Drawing.Point(9, 305);
+            this.checkBox_graph.Name = "checkBox_graph";
+            this.checkBox_graph.Size = new System.Drawing.Size(80, 17);
+            this.checkBox_graph.TabIndex = 27;
+            this.checkBox_graph.Text = "checkBox1";
+            this.checkBox_graph.UseVisualStyleBackColor = true;
+            this.checkBox_graph.CheckedChanged += new System.EventHandler(this.checkBox_graph_CheckedChanged);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(751, 488);
+            this.ClientSize = new System.Drawing.Size(969, 574);
+            this.Controls.Add(this.checkBox_graph);
             this.Controls.Add(this.label_period);
             this.Controls.Add(this.checkBox_manual);
             this.Controls.Add(this.label_Cutoff);
@@ -415,6 +443,8 @@
         private System.Windows.Forms.Label label_Cutoff;
         private System.Windows.Forms.CheckBox checkBox_manual;
         private System.Windows.Forms.Label label_period;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.CheckBox checkBox_graph;
     }
 }
 
