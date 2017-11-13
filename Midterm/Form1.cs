@@ -7,6 +7,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Text.RegularExpressions;
+using LiveCharts; //Core of the library
+using LiveCharts.Wpf; //The WPF controls
+using LiveCharts.WinForms; //the WinForm wrappers
+using LiveCharts.Configurations;
+
 namespace Midterm
 {
     public partial class Main : Form
@@ -17,6 +22,7 @@ namespace Midterm
         /// flag for connection between GUI and PIC
         /// </summary>
         public bool connectedflag = false;
+        public ChartValues<MeasureModel> ChartValues { get; set; }
         #endregion
 
         #region Main
@@ -27,6 +33,37 @@ namespace Midterm
         {
             InitializeComponent();
             Globals.Serial.ReadTimeout = -1;
+
+            var mapper = Mappers.Xy<MeasureModel>()
+                .X(model => model.DateTime.Ticks)   //use DateTime.Ticks as X
+                .Y(model => model.Value);           //use the value property as Y
+
+            //lets save the mapper globally.
+            Charting.For<MeasureModel>(mapper);
+
+            //the ChartValues property will store our values array
+            ChartValues = new ChartValues<MeasureModel>();
+            cartesianChart1.Series = new SeriesCollection
+            {
+                new LineSeries
+                {
+                    Values = ChartValues,
+                    PointGeometrySize = 18,
+                    StrokeThickness = 4
+                }
+            };
+            cartesianChart1.AxisX.Add(new Axis
+            {
+                DisableAnimations = true,
+                LabelFormatter = value => new System.DateTime((long)value).ToString("mm:ss"),
+                Separator = new Separator
+                {
+                    Step = TimeSpan.FromSeconds(1).Ticks
+                }
+            });
+
+            SetAxisLimits(System.DateTime.Now);
+
         }
 
         #endregion
@@ -700,14 +737,41 @@ namespace Midterm
                 this.Invoke(new Action<byte, byte>(Plot_Point), new object[] { value1, value2});
                 return;
             }
-            if(chart1.Series[0].Points.Count == 20)
+            //if(chart1.Series[0].Points.Count == 20)
+            //{
+            //    chart1.Series[0].Points.RemoveAt(0);
+            //    chart1.Series[1].Points.RemoveAt(0);
+            //}
+            //chart1.Series[0].Points.AddY(value1);
+            //chart1.Series[1].Points.AddY(value2);
+            //chart1.Update();
+
+            var now = System.DateTime.Now;
+
+            ChartValues.Add(new MeasureModel
             {
-                chart1.Series[0].Points.RemoveAt(0);
-                chart1.Series[1].Points.RemoveAt(0);
-            }
-            chart1.Series[0].Points.AddY(value1);
-            chart1.Series[1].Points.AddY(value2);
-            chart1.Update();
+                DateTime = now,
+                Value = value1
+            });
+
+            SetAxisLimits(now);
+
+            //lets only use the last 30 values
+            if (ChartValues.Count > 100) ChartValues.RemoveAt(0);
+        }
+
+        private void SetAxisLimits(System.DateTime now)
+        {
+            cartesianChart1.AxisX[0].MaxValue = now.Ticks + TimeSpan.FromSeconds(1).Ticks; // lets force the axis to be 100ms ahead
+            cartesianChart1.AxisX[0].MinValue = now.Ticks - TimeSpan.FromSeconds(8).Ticks; //we only care about the last 8 seconds
         }
     }
+
+    public class MeasureModel
+    {
+        public System.DateTime DateTime { get; set; }
+        public double Value { get; set; }
+    }
+
+
 }

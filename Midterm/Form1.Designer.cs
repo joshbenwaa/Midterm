@@ -64,6 +64,7 @@
             this.label_period = new System.Windows.Forms.Label();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.checkBox_graph = new System.Windows.Forms.CheckBox();
+            this.cartesianChart1 = new LiveCharts.WinForms.CartesianChart();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.OutputGroupBox.SuspendLayout();
@@ -372,11 +373,20 @@
             this.checkBox_graph.UseVisualStyleBackColor = true;
             this.checkBox_graph.CheckedChanged += new System.EventHandler(this.checkBox_graph_CheckedChanged);
             // 
+            // cartesianChart1
+            // 
+            this.cartesianChart1.Location = new System.Drawing.Point(216, 188);
+            this.cartesianChart1.Name = "cartesianChart1";
+            this.cartesianChart1.Size = new System.Drawing.Size(502, 222);
+            this.cartesianChart1.TabIndex = 28;
+            this.cartesianChart1.Text = "cartesianChart1";
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(969, 574);
+            this.Controls.Add(this.cartesianChart1);
             this.Controls.Add(this.checkBox_graph);
             this.Controls.Add(this.label_period);
             this.Controls.Add(this.checkBox_manual);
@@ -445,6 +455,7 @@
         private System.Windows.Forms.Label label_period;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.CheckBox checkBox_graph;
+        private LiveCharts.WinForms.CartesianChart cartesianChart1;
     }
 }
 
