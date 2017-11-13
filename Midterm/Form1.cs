@@ -26,6 +26,7 @@ namespace Midterm
         public Main()
         {
             InitializeComponent();
+            Globals.Serial.ReadTimeout = -1;
         }
 
         #endregion
@@ -586,41 +587,52 @@ namespace Midterm
 
         private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
+            //Globals.Serial.ReadTimeout = -1;
             HDLC_Rx DataRx = new HDLC_Rx();
             HDLC_Rx.DPA_RX_STATE state = new HDLC_Rx.DPA_RX_STATE();
             
-            while (true)
+            while (backgroundWorker1.CancellationPending == false)
             {
                 DataRx = new HDLC_Rx();
                 state = new HDLC_Rx.DPA_RX_STATE();
-
+                byte value = 0;
                 #region Parse through Data
 
+                try
+                {
+                    value = (byte)Globals.Serial.ReadByte();
+                }
+                catch
+                {
 
-                while (state == HDLC_Rx.DPA_RX_STATE.DPA_RX_NOERR)
-                {
-                    try
-                    {
-                        state = DataRx.DPA_RX_Parse((byte)Globals.Serial.ReadByte());
                 }
-                    catch (Exception)
-                {
-                    Append_Output(">> Test failed to parse data\n");
-                    return;
-                }
-            }
+                Plot_Point(value);
+                //    while (state == HDLC_Rx.DPA_RX_STATE.DPA_RX_NOERR)
+                //    {
+                //        try
+                //        {
+                //            state = DataRx.DPA_RX_Parse((byte)Globals.Serial.ReadByte());
+                //    }
+                //        catch (Exception)
+                //    {
+                //        Append_Output(">> Test failed to parse data\n");
+                //        return;
+                //    }
+                //}
 
-                switch (state)
-                {
-                    case HDLC_Rx.DPA_RX_STATE.DPA_RX_OK:
-                        Plot_Point(DataRx.Data[0], DataRx.Data[1]);
-                        break;
-                    case HDLC_Rx.DPA_RX_STATE.DPA_RX_FE:
-                        Append_Output(">> An error in the calibration data frame.\n"); return;
-                    case HDLC_Rx.DPA_RX_STATE.DPA_RX_CRCERR:
-                        //success = false;
-                        break;
-                }
+                //    switch (state)
+                //    {
+                //        case HDLC_Rx.DPA_RX_STATE.DPA_RX_OK:
+                //            Plot_Point(DataRx.Data[0]);
+                //            break;
+                //        case HDLC_Rx.DPA_RX_STATE.DPA_RX_FE:
+                //            Append_Output(">> An error in the calibration data frame.\n"); return;
+                //        case HDLC_Rx.DPA_RX_STATE.DPA_RX_CRCERR:
+                //            //success = false;
+                //            break;
+                //    }
+
+                System.Threading.Thread.Sleep(1);
             }
             #endregion
         }
@@ -632,6 +644,7 @@ namespace Midterm
 
         private void checkBox_graph_CheckedChanged(object sender, EventArgs e)
         {
+            Globals.Serial.ReadTimeout = -1;
             if(checkBox_graph.Checked)
             {
                 int FailedCounter = 0;
@@ -663,6 +676,8 @@ namespace Midterm
                         return;
                     }
                 }
+                Globals.Serial.DiscardInBuffer();
+                Globals.Serial.DiscardOutBuffer();
                 OutputLabel.Text += ">> Plotting is disabled\n";
             }
         }
@@ -677,20 +692,20 @@ namespace Midterm
             OutputLabel.Text += value;
         }
 
-        public void Plot_Point(byte value1, byte value2)
+        public void Plot_Point(byte value1)
         {
             if(InvokeRequired)
             {
-                this.Invoke(new Action<byte,byte>(Plot_Point), new object[] { value1, value2 });
+                this.Invoke(new Action<byte>(Plot_Point), new object[] { value1 });
                 return;
             }
             if(chart1.Series[0].Points.Count == 20)
             {
-                chart1.Series[0].Points.Clear();
-                chart1.Series[1].Points.Clear();
+                chart1.Series[0].Points.RemoveAt(0);
+               // chart1.Series[1].Points.Clear();
             }
             chart1.Series[0].Points.AddY(value1);
-            chart1.Series[1].Points.AddY(value2);
+            //chart1.Series[1].Points.AddY(value2);
             chart1.Update();
         }
     }
