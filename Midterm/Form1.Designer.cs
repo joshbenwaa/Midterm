@@ -206,7 +206,7 @@
             series2.Name = "Sampled";
             this.chart1.Series.Add(series1);
             this.chart1.Series.Add(series2);
-            this.chart1.Size = new System.Drawing.Size(741, 416);
+            this.chart1.Size = new System.Drawing.Size(324, 145);
             this.chart1.TabIndex = 12;
             this.chart1.Text = "chart1";
             // 
