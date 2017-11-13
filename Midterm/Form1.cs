@@ -66,51 +66,50 @@ namespace Midterm
 
             SetAxisLimits(System.DateTime.Now);
 
-            //The next code simulates data changes every 500 ms
-            Timer = new Timer
-            {
-                Interval = 500
-            };
-            Timer.Tick += TimerOnTick;
-            R = new Random();
-            Timer.Start();
+            ////The next code simulates data changes every 500 ms
+            //Timer = new Timer
+            //{
+            //    Interval = 500
+            //};
+            //Timer.Tick += TimerOnTick;
+            //Timer.Start();
         }
 
         public ChartValues<MeasureModel> ChartValues { get; set; }
-        public Timer Timer { get; set; }
-        public Random R { get; set; }
+        //public Timer Timer { get; set; }
 
         private void SetAxisLimits(System.DateTime now)
         {
+            if (InvokeRequired)
+            {
+                this.Invoke(new Action<System.DateTime>(SetAxisLimits), new object[] { now });
+                return;
+            }
+
             cartesianChart1.AxisX[0].MaxValue = now.Ticks + TimeSpan.FromSeconds(1).Ticks; // lets force the axis to be 100ms ahead
             cartesianChart1.AxisX[0].MinValue = now.Ticks - TimeSpan.FromSeconds(8).Ticks; //we only care about the last 8 seconds
         }
 
-        private void TimerOnTick(object sender, EventArgs eventArgs)
-        {
-            var now = System.DateTime.Now;
+        //private void TimerOnTick(object sender, EventArgs eventArgs)
+        //{
+        //    var now = System.DateTime.Now;
 
-            ChartValues.Add(new MeasureModel
-            {
-                DateTime = now,
-                Value = R.Next(0, 10)
-            });
+        //    ChartValues.Add(new MeasureModel
+        //    {
+        //        DateTime = now,
+        //        Value = //Value to Plot
+        //    });
 
-            SetAxisLimits(now);
+        //    SetAxisLimits(now);
 
-            //lets only use the last 30 values
-            if (ChartValues.Count > 30) ChartValues.RemoveAt(0);
-        }
+        //    //lets only use the last 30 values
+        //    if (ChartValues.Count > 30) ChartValues.RemoveAt(0);
+        //}
 
         #endregion
 
         #region Bluetooth Event Handlers
 
-        /// <summary>
-        /// Event handler to disconnect to close serial port.
-        /// </summary>
-        /// <param name="sender">object sender</param>
-        /// <param name="e">EventArgs</param>
         private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Globals.Serial.Close();
@@ -119,11 +118,6 @@ namespace Midterm
             BlutoothStatusLabel.ForeColor = System.Drawing.Color.FromArgb(255, 0, 0);
         }
 
-        /// <summary>
-        /// Event Handler to launch the bluetooth settings form. This is where you connect to the board.
-        /// </summary>
-        /// <param name="sender">object sender</param>
-        /// <param name="e">EventArgs e</param>
         private void bluetoothSettingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
@@ -660,43 +654,10 @@ namespace Midterm
 
         private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            HDLC_Rx DataRx = new HDLC_Rx();
-            HDLC_Rx.DPA_RX_STATE state = new HDLC_Rx.DPA_RX_STATE();
-            
             while (true)
             {
-                DataRx = new HDLC_Rx();
-                state = new HDLC_Rx.DPA_RX_STATE();
 
-                #region Parse through Data
-
-
-                while (state == HDLC_Rx.DPA_RX_STATE.DPA_RX_NOERR)
-                {
-                    try
-                    {
-                        state = DataRx.DPA_RX_Parse((byte)Globals.Serial.ReadByte());
-                }
-                    catch (Exception)
-                {
-                    Append_Output(">> Test failed to parse data\n");
-                    return;
-                }
             }
-
-                switch (state)
-                {
-                    case HDLC_Rx.DPA_RX_STATE.DPA_RX_OK:
-                        Plot_Point(DataRx.Data[0], DataRx.Data[1]);
-                        break;
-                    case HDLC_Rx.DPA_RX_STATE.DPA_RX_FE:
-                        Append_Output(">> An error in the calibration data frame.\n"); return;
-                    case HDLC_Rx.DPA_RX_STATE.DPA_RX_CRCERR:
-                        //success = false;
-                        break;
-                }
-            }
-            #endregion
         }
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
@@ -721,11 +682,14 @@ namespace Midterm
                 }
                 OutputLabel.Text += ">> Plotting is Enabled\n";
                 //Globals.Serial.DiscardInBuffer();
-                backgroundWorker1.RunWorkerAsync();
+                Globals.Serial.DataReceived += DataRecieved;
+                Globals.Serial.ReceivedBytesThreshold = 7;
+               // backgroundWorker1.RunWorkerAsync();
             }
             else
             {
-                backgroundWorker1.CancelAsync();
+                //backgroundWorker1.CancelAsync();
+                Globals.Serial.DataReceived -= DataRecieved;
                 int FailedCounter = 0;
                 OutputLabel.Text = ">> Sending Write to GUI Command...\n";
                 while (!Send_Write_to_GUI(0))
@@ -766,6 +730,50 @@ namespace Midterm
             chart1.Series[0].Points.AddY(value1);
             chart1.Series[1].Points.AddY(value2);
             chart1.Update();
+        }
+
+        private void DataRecieved(object sender, EventArgs eventArgs)
+        {
+            HDLC_Rx DataRx = new HDLC_Rx();
+            HDLC_Rx.DPA_RX_STATE state = new HDLC_Rx.DPA_RX_STATE();
+            var now = System.DateTime.Now;
+            DataRx = new HDLC_Rx();
+            state = new HDLC_Rx.DPA_RX_STATE();
+
+            while (state == HDLC_Rx.DPA_RX_STATE.DPA_RX_NOERR)
+            {
+                try
+                {
+                    state = DataRx.DPA_RX_Parse((byte)Globals.Serial.ReadByte());
+                }
+                catch (Exception)
+                {
+                    Append_Output(">> Test failed to parse data\n");
+                    return;
+                }
+            }
+
+            switch (state)
+            {
+                case HDLC_Rx.DPA_RX_STATE.DPA_RX_OK:
+                    ChartValues.Add(new MeasureModel
+                    {
+                        DateTime = now,
+                        Value = DataRx.Data[0]//Value to Plot
+                    });
+
+                    SetAxisLimits(now);
+
+                    //lets only use the last 30 values
+                    if (ChartValues.Count > 30) ChartValues.RemoveAt(0);
+                    break;
+
+                case HDLC_Rx.DPA_RX_STATE.DPA_RX_FE:
+                    Append_Output(">> An error in the calibration data frame.\n"); return;
+                case HDLC_Rx.DPA_RX_STATE.DPA_RX_CRCERR:
+                    //success = false;
+                    break;
+            }
         }
     }
 }
