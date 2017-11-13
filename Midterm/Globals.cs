@@ -68,6 +68,8 @@ namespace Midterm
         public static UInt16 BPF_300_Period = 50;
         public static UInt16 BPF_200_Period = 25;
         public static UInt16 BPF_100_Period = 17;
+
+        public static Int64 DataCounter = 0;
         /// <summary>
         /// Serial COM Port for GUI
         /// </summary>

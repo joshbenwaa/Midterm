@@ -22,7 +22,8 @@ namespace Midterm
         /// flag for connection between GUI and PIC
         /// </summary>
         public bool connectedflag = false;
-        public ChartValues<MeasureModel> ChartValues { get; set; }
+        public ChartValues<MeasureModel> ChartValues1 { get; set; }
+        public ChartValues<MeasureModel> ChartValues2 { get; set; }
         #endregion
 
         #region Main
@@ -35,34 +36,42 @@ namespace Midterm
             Globals.Serial.ReadTimeout = -1;
 
             var mapper = Mappers.Xy<MeasureModel>()
-                .X(model => model.DateTime.Ticks)   //use DateTime.Ticks as X
+                .X(model => model.DateTime)   //use DateTime.Ticks as X
                 .Y(model => model.Value);           //use the value property as Y
 
             //lets save the mapper globally.
             Charting.For<MeasureModel>(mapper);
 
             //the ChartValues property will store our values array
-            ChartValues = new ChartValues<MeasureModel>();
+            ChartValues1 = new ChartValues<MeasureModel>();
+            ChartValues2 = new ChartValues<MeasureModel>();
             cartesianChart1.Series = new SeriesCollection
             {
                 new LineSeries
                 {
-                    Values = ChartValues,
-                    PointGeometrySize = 18,
-                    StrokeThickness = 4
+                    Values = ChartValues1,
+                    PointGeometrySize = 9,
+                    StrokeThickness = 2,
+                    Fill = System.Windows.Media.Brushes.Transparent
+                },
+                new LineSeries
+                {
+                    Values = ChartValues2,
+                    PointGeometrySize = 9,
+                    StrokeThickness = 2,
+                    Fill = System.Windows.Media.Brushes.Transparent
                 }
             };
             cartesianChart1.AxisX.Add(new Axis
             {
                 DisableAnimations = true,
-                LabelFormatter = value => new System.DateTime((long)value).ToString("ss:ms"),
                 Separator = new Separator
                 {
-                    Step = TimeSpan.FromSeconds(0.1).Ticks
+                    Step = 1
                 }
             });
-
-            SetAxisLimits(System.DateTime.Now);
+            cartesianChart1.AnimationsSpeed = TimeSpan.FromMilliseconds(.1); 
+            SetAxisLimits(0);
 
         }
 
@@ -746,30 +755,42 @@ namespace Midterm
             //chart1.Series[1].Points.AddY(value2);
             //chart1.Update();
 
-            var now = System.DateTime.Now;
+            var now = (int)Globals.DataCounter++;
 
-            ChartValues.Add(new MeasureModel
+            ChartValues1.Add(new MeasureModel
             {
                 DateTime = now,
                 Value = value1
             });
 
+            ChartValues2.Add(new MeasureModel
+            {
+                DateTime = now,
+                Value = value2
+            });
+
             SetAxisLimits(now);
 
             //lets only use the last 30 values
-            if (ChartValues.Count > 100) ChartValues.RemoveAt(0);
+            if (ChartValues1.Count > 16)
+            {
+                ChartValues1.RemoveAt(0);
+                ChartValues2.RemoveAt(0);
+            }
+                
+                
         }
 
-        private void SetAxisLimits(System.DateTime now)
+        private void SetAxisLimits(int now)
         {
-            cartesianChart1.AxisX[0].MaxValue = now.Ticks + TimeSpan.FromSeconds(.1).Ticks; // lets force the axis to be 100ms ahead
-            cartesianChart1.AxisX[0].MinValue = now.Ticks - TimeSpan.FromSeconds(.1).Ticks; //we only care about the last 8 seconds
+            cartesianChart1.AxisX[0].MaxValue = now + 1; // lets force the axis to be 100ms ahead
+            cartesianChart1.AxisX[0].MinValue = now - 16; //we only care about the last 8 seconds
         }
     }
 
     public class MeasureModel
     {
-        public System.DateTime DateTime { get; set; }
+        public int DateTime { get; set; }
         public double Value { get; set; }
     }
 
