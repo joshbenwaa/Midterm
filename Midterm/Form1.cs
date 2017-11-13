@@ -595,18 +595,19 @@ namespace Midterm
             {
                 DataRx = new HDLC_Rx();
                 state = new HDLC_Rx.DPA_RX_STATE();
-                byte value = 0;
+                byte value1 = 0, value2 = 0;
                 #region Parse through Data
 
                 try
                 {
-                    value = (byte)Globals.Serial.ReadByte();
+                    value1 = (byte)Globals.Serial.ReadByte();
+                    value2 = (byte)Globals.Serial.ReadByte();
                 }
                 catch
                 {
 
                 }
-                Plot_Point(value);
+                Plot_Point(value1, value2);
                 //    while (state == HDLC_Rx.DPA_RX_STATE.DPA_RX_NOERR)
                 //    {
                 //        try
@@ -692,20 +693,20 @@ namespace Midterm
             OutputLabel.Text += value;
         }
 
-        public void Plot_Point(byte value1)
+        public void Plot_Point(byte value1, byte value2)
         {
             if(InvokeRequired)
             {
-                this.Invoke(new Action<byte>(Plot_Point), new object[] { value1 });
+                this.Invoke(new Action<byte, byte>(Plot_Point), new object[] { value1, value2});
                 return;
             }
             if(chart1.Series[0].Points.Count == 20)
             {
                 chart1.Series[0].Points.RemoveAt(0);
-               // chart1.Series[1].Points.Clear();
+                chart1.Series[1].Points.RemoveAt(0);
             }
             chart1.Series[0].Points.AddY(value1);
-            //chart1.Series[1].Points.AddY(value2);
+            chart1.Series[1].Points.AddY(value2);
             chart1.Update();
         }
     }
