@@ -55,10 +55,10 @@ namespace Midterm
             cartesianChart1.AxisX.Add(new Axis
             {
                 DisableAnimations = true,
-                LabelFormatter = value => new System.DateTime((long)value).ToString("mm:ss"),
+                LabelFormatter = value => new System.DateTime((long)value).ToString("ss:ms"),
                 Separator = new Separator
                 {
-                    Step = TimeSpan.FromSeconds(1).Ticks
+                    Step = TimeSpan.FromSeconds(0.1).Ticks
                 }
             });
 
@@ -762,8 +762,8 @@ namespace Midterm
 
         private void SetAxisLimits(System.DateTime now)
         {
-            cartesianChart1.AxisX[0].MaxValue = now.Ticks + TimeSpan.FromSeconds(1).Ticks; // lets force the axis to be 100ms ahead
-            cartesianChart1.AxisX[0].MinValue = now.Ticks - TimeSpan.FromSeconds(8).Ticks; //we only care about the last 8 seconds
+            cartesianChart1.AxisX[0].MaxValue = now.Ticks + TimeSpan.FromSeconds(.1).Ticks; // lets force the axis to be 100ms ahead
+            cartesianChart1.AxisX[0].MinValue = now.Ticks - TimeSpan.FromSeconds(.1).Ticks; //we only care about the last 8 seconds
         }
     }
 
