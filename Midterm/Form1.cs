@@ -36,7 +36,7 @@ namespace Midterm
             Globals.Serial.ReadTimeout = -1;
 
             var mapper = Mappers.Xy<MeasureModel>()
-                .X(model => model.DateTime)   //use DateTime.Ticks as X
+                .X(model => model.SampleNum)   //use DateTime.Ticks as X
                 .Y(model => model.Value);           //use the value property as Y
 
             //lets save the mapper globally.
@@ -654,30 +654,6 @@ namespace Midterm
 
                 }
                 Plot_Point(value1, value2);
-                //    while (state == HDLC_Rx.DPA_RX_STATE.DPA_RX_NOERR)
-                //    {
-                //        try
-                //        {
-                //            state = DataRx.DPA_RX_Parse((byte)Globals.Serial.ReadByte());
-                //    }
-                //        catch (Exception)
-                //    {
-                //        Append_Output(">> Test failed to parse data\n");
-                //        return;
-                //    }
-                //}
-
-                //    switch (state)
-                //    {
-                //        case HDLC_Rx.DPA_RX_STATE.DPA_RX_OK:
-                //            Plot_Point(DataRx.Data[0]);
-                //            break;
-                //        case HDLC_Rx.DPA_RX_STATE.DPA_RX_FE:
-                //            Append_Output(">> An error in the calibration data frame.\n"); return;
-                //        case HDLC_Rx.DPA_RX_STATE.DPA_RX_CRCERR:
-                //            //success = false;
-                //            break;
-                //    }
 
                 System.Threading.Thread.Sleep(1);
             }
@@ -746,32 +722,23 @@ namespace Midterm
                 this.Invoke(new Action<byte, byte>(Plot_Point), new object[] { value1, value2});
                 return;
             }
-            //if(chart1.Series[0].Points.Count == 20)
-            //{
-            //    chart1.Series[0].Points.RemoveAt(0);
-            //    chart1.Series[1].Points.RemoveAt(0);
-            //}
-            //chart1.Series[0].Points.AddY(value1);
-            //chart1.Series[1].Points.AddY(value2);
-            //chart1.Update();
 
             var now = (int)Globals.DataCounter++;
 
             ChartValues1.Add(new MeasureModel
             {
-                DateTime = now,
+                SampleNum = now,
                 Value = value1
             });
 
             ChartValues2.Add(new MeasureModel
             {
-                DateTime = now,
+                SampleNum = now,
                 Value = value2
             });
 
             SetAxisLimits(now);
 
-            //lets only use the last 30 values
             if (ChartValues1.Count > 16)
             {
                 ChartValues1.RemoveAt(0);
@@ -783,14 +750,14 @@ namespace Midterm
 
         private void SetAxisLimits(int now)
         {
-            cartesianChart1.AxisX[0].MaxValue = now + 1; // lets force the axis to be 100ms ahead
-            cartesianChart1.AxisX[0].MinValue = now - 16; //we only care about the last 8 seconds
+            cartesianChart1.AxisX[0].MaxValue = now + 1;
+            cartesianChart1.AxisX[0].MinValue = now - 16;
         }
     }
 
     public class MeasureModel
     {
-        public int DateTime { get; set; }
+        public int SampleNum { get; set; }
         public double Value { get; set; }
     }
 
