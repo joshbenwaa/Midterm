@@ -338,9 +338,9 @@
             this.checkBox_graph.AutoSize = true;
             this.checkBox_graph.Location = new System.Drawing.Point(9, 305);
             this.checkBox_graph.Name = "checkBox_graph";
-            this.checkBox_graph.Size = new System.Drawing.Size(80, 17);
+            this.checkBox_graph.Size = new System.Drawing.Size(90, 17);
             this.checkBox_graph.TabIndex = 27;
-            this.checkBox_graph.Text = "checkBox1";
+            this.checkBox_graph.Text = "Check to Plot";
             this.checkBox_graph.UseVisualStyleBackColor = true;
             this.checkBox_graph.CheckedChanged += new System.EventHandler(this.checkBox_graph_CheckedChanged);
             // 

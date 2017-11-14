@@ -635,6 +635,7 @@ namespace Midterm
         {
             //Globals.Serial.ReadTimeout = -1;
             HDLC_Rx DataRx = new HDLC_Rx();
+            List<byte> Buffer = new List<byte>();
             HDLC_Rx.DPA_RX_STATE state = new HDLC_Rx.DPA_RX_STATE();
             
             while (backgroundWorker1.CancellationPending == false)
@@ -646,16 +647,29 @@ namespace Midterm
 
                 try
                 {
-                    value1 = (byte)Globals.Serial.ReadByte();
-                    value2 = (byte)Globals.Serial.ReadByte();
+                    Buffer.Add((byte)Globals.Serial.ReadByte());
+                    //value1 = (byte)Globals.Serial.ReadByte();
+                    //value2 = (byte)Globals.Serial.ReadByte();
                 }
                 catch
                 {
 
                 }
-                Plot_Point(value1, value2);
-
-                System.Threading.Thread.Sleep(1);
+                if(Buffer.Contains(0xFF))
+                {
+                    try
+                    {
+                        value1 = Buffer[Buffer.IndexOf(0xFF) - 2];
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                    value2 = Buffer[Buffer.IndexOf(0xFF) - 1];
+                    Buffer.RemoveRange(Buffer.IndexOf(0xFF) - 2, 3);
+                    Plot_Point(value1, value2);
+                    //System.Threading.Thread.Sleep(1);
+                }
             }
             #endregion
         }
