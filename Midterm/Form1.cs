@@ -706,7 +706,7 @@ namespace Midterm
                     }
                 }
                 OutputLabel.Text += ">> Plotting is Enabled\n";
-                //Globals.Serial.DiscardInBuffer();
+                Globals.Serial.DiscardInBuffer();
                 backgroundWorker1.RunWorkerAsync();
             }
             else
